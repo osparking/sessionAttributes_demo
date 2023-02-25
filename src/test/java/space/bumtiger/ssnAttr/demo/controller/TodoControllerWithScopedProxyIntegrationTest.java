@@ -1,7 +1,9 @@
 package space.bumtiger.ssnAttr.demo.controller;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,9 +41,28 @@ class TodoControllerWithScopedProxyIntegrationTest {
 
     TodoItem item = (TodoItem) 
     		result.getModelAndView().getModel().get("todo");
-    // @formatter:on
 
 		assertFalse(StringUtils.hasLength(item.getDescription()));
 	}
+	
+	@Test
+	public void whenSubmit_thenSubsequentReqContainRecentTodo()
+			throws Exception {
+		mockMvc.perform(post("/scopedproxy/form")
+				.param("description", "newtodo"))
+				.andExpect(status().is3xxRedirection())
+				.andReturn();
+
+		MvcResult result = mockMvc.perform(get("/scopedproxy/form"))
+				.andExpect(status().isOk())
+				.andExpect(model().attributeExists("todo"))
+				.andReturn();
+		
+		TodoItem item = (TodoItem) 
+				result.getModelAndView().getModel().get("todo");
+
+		assertEquals("newtodo", item.getDescription());
+	}
+  // @formatter:on
 
 }
